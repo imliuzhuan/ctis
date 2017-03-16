@@ -1,0 +1,67 @@
+@CHARSET "UTF-8";
+body{
+	background-color: white;
+}
+.bus_form {
+	font-family: arial;
+	font-size: 9pt;
+	line-height: 18px;
+}
+
+.bus_form_subtitle {
+	padding: 0 0 5px;
+}
+
+.gap-right-small {
+	margin-right: 5px;
+}
+
+.gap-right {
+	margin-right: 10px;
+}
+
+.input {
+	border-color: #999 #d8d8d8 #d8d8d8 #999;
+	border-style: solid;
+	border-width: 1px;
+	height: 24px;
+	padding: 0 4px;
+	width: 178px;
+}
+
+.bus_exchange {
+	background: none repeat scroll 0 0 #f9f9f9;
+	border: 1px solid #d8d8d8;
+	cursor: pointer;
+	display: inline-block;
+	line-height: 0;
+	padding: 5px;
+}
+
+.bus_exchange:hover {
+	border: solid 1px #388bff;
+}
+
+.icon {
+	display: inline-block;
+	height: 14px;
+	width: 14px;
+	background: url("../images/baidu_icon.png") no-repeat scroll -48px -168px;
+}
+
+.btn {
+	background-color: #f9f9f9;
+	border: 1px solid #d8d8d8;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 13px;
+	height: 24px;
+	line-height: 25px;
+	padding: 0 14px;
+	text-align: center;
+	vertical-align: middle;
+	color: white;
+	text-decoration: none;
+	background-color: #388bff;
+	border-color: #3c8dff #408ffe #3680e6;
+}

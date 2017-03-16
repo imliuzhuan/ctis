@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/bus.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+  </head>
+  
+  <body>
+    <div id="grid"></div>
+    <div id="too_bar" style="padding: 5px;">
+    	<div style="margin-bottom: 5px;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-delete" plain="true" onclick="del();">删除</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-agree" plain="true" onclick="operMore('2');">通过</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-disagree" plain="true" onclick="operMore('1');">不通过</a>
+    	</div>
+    	<div style="padding: 0 0 0 7px;color: #333">
+	    	<form id="queryForm">
+	    		评论状态：
+	    		<select class="easyui-combobox" name="state" id="state" panelHeight="auto" style="width:110px;">
+					<option value="">--</option>
+					<option value="0">待审核</option>
+					<option value="1">审核未通过</option>
+					<option value="2">审核通过</option>
+				</select>
+	    		创建时间：<input type="text" class="easyui-datebox" name="dateFrom" editable="false" style="width: 110px;">
+	    		到：<input type="text" class="easyui-datebox" name="dateTo" editable="false" style="width: 110px;">
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-search" style="height: 18px;" onclick="list();">查询</a>
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" style="height: 18px;" onclick="reset();">重置</a>
+	   		</form>
+    	</div>
+    </div>
+  </body>
+  <script type="text/javascript">
+  $(function(){
+	    $("#grid").datagrid({   
+	        url: "comments_list",
+	        fit: true,
+	        fitColumns: true,
+	        striped: true,
+	        rownumbers: true,
+	        border: false,
+	        pagination: true,
+	        singleSelect: true,
+	        checkOnSelect: false,
+	        selectOnCheck: false,
+	        pageSize: 20,
+	        pageNumber: 1,
+	        toolbar: "#too_bar",
+	        columns:[[
+				{field:"id", title:"", checkbox: true},
+	            {field:"topicId",title:"话题名称",sortable:true,width:30,formatter:topicId},
+	            {field:"content",title:"评论内容",sortable:true,width:100},
+	            {field:"state",title:"评论状态",sortable:true,formatter:commentsState},
+	            {field:"creator",title:"创建者",sortable:true,formatter:creator},
+	            {field:"createTime",title:"创建时间",sortable:true},
+	            {field:"praise",title:"支持",sortable:true},
+	            {field:"tread",title:"反对",sortable:true},
+	            {field:"oper",title:"操作",width:41,formatter:operBtn}
+	        ]],
+	        onLoadSuccess: function(data){
+	        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+	        	$("a.operBtn").linkbutton();
+	        }
+	    });
+	});
+  	
+  //批量删除
+  function del() {
+	var $checked = $("#grid").datagrid("getChecked");
+	if (!$checked || $checked.length == 0) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	var ids="";
+	var flag = true;
+	$.each($checked,function(i,n){
+		if (n.state!="0") {
+			flag = false;
+			context.warning("您选择的包含有已审核的项！");
+			return false;
+		}
+		ids += "ids=" + n.id + "&";
+	});
+	if (ids.length>0) {
+		ids = ids.substring(0, ids.length-1);
+	}
+	if(!flag) return;
+  	context.confirm("确认删除？", function(){
+  		$.ajax({
+  			type:"post",
+  			url:"comments_deleteMore",
+  			data:ids,
+  			success:function(data){
+  				if (data&&data=="ok") {
+  					context.show("删除成功！");
+  	  				$("#grid").datagrid('reload');
+				} else {
+					context.alert("删除失败！");
+				}
+  			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+  		});
+  	});
+  }
+  //批量审批
+  function operMore(state) {
+	var $checked = $("#grid").datagrid("getChecked");
+	if (!$checked || $checked.length == 0) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	var ids="";
+	var flag = true;
+	$.each($checked,function(i,n){
+		if (n.state!="0") {
+			flag = false;
+			context.warning("您选择的包含有已审核的项！");
+			return false;
+		}
+		ids += "ids=" + n.id + "&";
+	});
+	if(!flag) return;
+  	context.confirm("确认提交？", function(){
+  		$.ajax({
+  			type:"post",
+  			url:"comments_checkMore",
+  			data:ids+"state="+state,
+  			success:function(data){
+  				if (data&&data=="ok") {
+  					context.show("操作成功！");
+  	  				$("#grid").datagrid("reload");
+				} else {
+					context.alert("操作失败！");
+				}
+  			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+  		});
+  	});
+  }
+function list(){
+	$("#grid").datagrid("load",$("#queryForm").serializeObject());
+}
+function reset(){
+	$("#queryForm").find("input").val("");
+	$("#state").combobox("setValue","");
+}
+function operBtn(value, rowData, rowIndex){
+	var btn1 = "<a href='#' iconCls='icon-delete' class='easyui-linkbutton operBtn' plain='true' onclick='oper(\""+rowData.id+"\",\"delete\");'>删除</a>";
+	var btn2 = "<a href='#' iconCls='icon-agree' class='easyui-linkbutton operBtn' plain='true' onclick='oper(\""+rowData.id+"\",\"agree\");'>通过</a>";
+	var btn3 = "<a href='#' iconCls='icon-disagree' class='easyui-linkbutton operBtn' plain='true' onclick='oper(\""+rowData.id+"\",\"disagree\");'>不通过</a>";
+	var rtn = "";
+	if (rowData.state=="0") {
+		rtn = btn1 + btn2 + btn3;
+	}
+	if (rowData.state=="1") {
+		rtn = btn1;
+	}
+	return rtn;
+}
+function oper(id,flag){
+	if (flag&&flag=="delete") {
+	  	context.confirm("确认删除？", function(){
+	  		$.ajax({
+	  			type:"post",
+	  			url:"comments_delete",
+	  			data:{"id":id},
+	  			success:function(data){
+	  				if (data&&data=="ok") {
+	  					context.show("删除成功！");
+	  	  				$("#grid").datagrid('reload');
+					} else {
+						context.alert("删除失败！");
+					}
+	  			},
+				error: function(data){
+					context.warning("系统异常,请联系管理员!");
+				}
+	  		});
+	  	});
+	} else {
+  		$.ajax({
+  			type:"post",
+  			url:"comments_check",
+  			data:{"id":id,"flag":flag},
+  			success:function(data){
+  				if (data&&data=="ok") {
+  					context.show("操作成功！");
+  	  				$("#grid").datagrid("reload");
+				} else {
+					context.alert("操作失败！");
+				}
+  			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+  		});
+	}
+}
+  </script>
+</html>

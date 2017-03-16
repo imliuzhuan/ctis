@@ -1,0 +1,85 @@
+<style>
+/* 统一边框样式 */
+.input {
+    border:1px solid #7F9DB9;    
+    padding:2px;
+    border-radius:5px;
+	height: 16px;
+}
+.textarea {
+    border:1px solid #7F9DB9; 
+	border-radius:5px;
+	font-size: 12px;
+	width: 510px;
+	resize: none;
+}
+.top {
+    margin-top:2px;
+}
+/* 统一readonly/disabled的样式 */
+.readonly, input[readonly], input[disabled], textarea[readonly],textarea[disabled] {
+	color:#555;
+	background-color: #e8e8e8;
+}
+/* 获得焦点时边框用红色 */
+.focus, input:focus, select:focus, textarea:focus {
+	outline:red solid 1px;
+} 
+/* 编辑表格的样式 */
+.table-edit {
+	border-collapse: collapse;
+	border-spacing:0;
+}
+.table-edit tr{height:22px;}
+.table-edit td{	
+	border-color:#cccccc;
+	border-style:none none dashed none;
+	border-width:0px 0px 1px 0px;
+	padding:5px;
+}
+/* 修复与easyui冲突的地方 */
+td span.combobox{
+	margin-top:2px;
+}
+</style>
+<form id="form" method="post" >
+	<input type="hidden" id="id" name="id"/>
+	<table class="table-edit"  width="95%" align="center" style="margin:10px;">
+		<tr>
+			<td>路线编号</td>
+			<td><input type="text" name="busCode" id="busCode" class="easyui-validatebox input top" required="true"/></td>
+			<td>首站</td>
+			<td><input type="text" name="firstStation" id="firstStation" class="easyui-validatebox input top" required="true"/></td>
+		</tr>
+		<tr>
+			<td>首站运行起始时间</td>
+			<td><input type="text" name="firstStartTime" id="firstStartTime" class="easyui-timespinner input top" required="true" showSeconds="false"/></td>
+			<td>首站运行截止时间</td>
+			<td><input type="text" name="firstEndTime" id="firstEndTime" class="easyui-timespinner input top" required="true" showSeconds="false"/></td>
+		</tr>
+		<tr>
+			<td>末站</td>
+			<td><input type="text" name="lastStation" id="lastStation" class="easyui-validatebox input top" required="true"/></td>
+			<td>末站运行起始时间</td>
+			<td><input type="text" name="lastStartTime" id="lastStartTime" class="easyui-timespinner input top" required="true" showSeconds="false"/></td>
+		</tr>
+		<tr>
+			<td>末站运行截止时间</td>
+			<td><input type="text" name="lastEndTime" id="lastEndTime" class="easyui-timespinner input top" required="true" showSeconds="false"/></td>
+			<td>全程票价</td>
+			<td><input type="text" name="price" id="price" class="easyui-validatebox input top" required="true"/></td>
+		</tr>
+		<tr>
+			<td>上行各站站名</td>
+			<td colspan="3">
+				<textarea name="upStations" id="upStations" class="easyui-validatebox textarea" placeholder="站点之间请用“-”隔开" required="true"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>下行各站站名</td>
+			<td colspan="3">
+				<textarea name="downStations" id="downStations" class="easyui-validatebox textarea" placeholder="站点之间请用“-”隔开" required="true"></textarea>
+			</td>
+		</tr>
+	</table>
+</form>

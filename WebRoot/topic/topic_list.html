@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/main.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+  </head>
+  
+  <body>
+    <div id="grid"></div>
+    <div id="too_bar" style="padding: 5px;">
+    	<div style="margin-bottom: 5px;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="oper('add');">添加</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="oper('modify');">修改</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="del();">删除</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-publish" plain="true" onclick="publish();">发布</a>
+    	</div>
+    	<div style="padding: 0 0 0 7px;color: #333">
+	    	<form id="queryForm">
+	    		话题名称：<input type="text" class="textbox" name="name" style="width: 110px;">
+	    		状态：
+	    		<select class="easyui-combobox" name="state" id="state" panelHeight="auto" style="width:110px;">
+					<option value="">--</option>
+					<option value="0">未发布</option>
+					<option value="1">已发布</option>
+				</select>
+	    		创建时间：<input type="text" class="easyui-datebox" name="dateFrom" editable="false" style="width: 110px;">
+	    		到：<input type="text" class="easyui-datebox" name="dateTo" editable="false" style="width: 110px;">
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-search" style="height: 18px;" onclick="list();">查询</a>
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" style="height: 18px;" onclick="reset();">重置</a>
+	   		</form>
+    	</div>
+    </div>
+  </body>
+  <script type="text/javascript">
+  $(function(){
+	    $("#grid").datagrid({   
+	        url: "topic_list",
+	        fit: true,
+	        fitColumns: true,
+	        striped: true,
+	        rownumbers: true,
+	        border: false,
+	        pagination: true,
+	        singleSelect: true,
+	        checkOnSelect: false,
+	        selectOnCheck: false,
+	        pageSize: 20,
+	        pageNumber: 1,
+	        toolbar: "#too_bar",
+	        columns:[[
+				{field:"id", title:"", hidden: true},
+	            {field:"name",title:"话题名称",sortable:true,width:30},
+	            {field:"content",title:"话题内容",sortable:true,width:100},
+	            {field:"creator",title:"创建者",sortable:true,formatter:creator},
+	            {field:"lastModifyTime",title:"最后一次修改时间",sortable:true},
+	            {field:"state",title:"状态",sortable:true,formatter:topicState}
+	        ]],
+	        onLoadSuccess: function(data){
+	        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+	        	$("#operBtn").linkbutton();
+	        }
+	    });
+	});
+  //增加或修改
+  function oper(oper){
+	var $select = $("#grid").datagrid("getSelected");
+	if (oper == "modify" && !$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	if (oper == "modify" && $select.state=="1") {
+		context.warning("已发布的话题不能修改！");
+		return;
+	}
+  	context.dialog({
+  	    title: (oper == "add" ? "增加" : "修改") + "话题",
+  	    href: "topic_detail.html",
+  	    width:600,
+  	    height:260,
+  	    onLoad: function(){
+  	    	if(oper == "modify") {
+  	    		$("#topicForm").fillForm($select);
+  	    	}
+  	    },
+  	    buttons:[
+  	    	{
+  	    		text:"保存",
+  	    		iconCls:"icon-save",
+  	    		handler:function(){
+  	    			$("#topicForm").form("submit",{
+  	    				url:"topic_" + oper,
+  	    				onSubmit:function(){
+  	    					return $(this).form("validate");
+  	    				},
+  	    				success:function(data){
+  	    					if (data&&$.parseJSON(data)=="ok") {
+  	    						context.closeDialog();
+  	  	    					context.show((oper == "add" ? "增加" : "修改") + "成功！");
+  	  	    					$("#grid").datagrid("reload");
+							} else {
+								context.closeDialog();
+	  	    					context.warning((oper == "add" ? "增加" : "修改") + "失败！");
+	  	    					$("#grid").datagrid("reload");
+							}
+  	    				},
+  	    				error: function(data){
+  	    					context.warning("系统异常,请联系管理员!");
+  	    				}
+  	    			});
+  	    		}
+  	    	},
+  	    	{
+  	    		text:"关闭",
+  	    		iconCls:"icon-cancel",
+  	    		handler:function(){
+  	    			context.closeDialog();
+  	    		}
+  	    	}
+  	    ]
+  	});
+  }
+  	
+  //删除
+  function del() {
+	var $select = $("#grid").datagrid("getSelected");
+	if (!$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	if ($select.state=="1") {
+		context.warning("已发布的话题不能删除！");
+		return;
+	}
+  	context.confirm("确认删除？", function(){
+  		$.ajax({
+  			type:"post",
+  			url:"topic_delete",
+  			data:$select,
+  			success:function(data){
+  				if (data&&data=="ok") {
+  					context.show("删除成功！");
+  	  				$("#grid").datagrid("reload");
+				} else {
+					context.alert("删除失败！");
+				}
+  			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+  		});
+  	});
+  }
+function list(){
+	$("#grid").datagrid("load",$("#queryForm").serializeObject());
+}
+function reset(){
+	$("#queryForm").find("input").val("");
+	$("#state").combobox("setValue","");
+}
+function publish(){
+	var $select = $("#grid").datagrid("getSelected");
+	if (!$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	if ($select.state=="1") {
+		context.warning("话题已发布！");
+		return;
+	}
+	$.ajax({
+		type:"post",
+		url:"topic_modify",
+		data:{id:$select.id,state:"1"},
+		success:function(data){
+			if (data&&data=="ok") {
+				context.show("发布成功！");
+  				$("#grid").datagrid("reload");
+			} else {
+				context.alert("发布失败！");
+			}
+		},
+		error: function(data){
+			context.warning("系统异常,请联系管理员!");
+		}
+	});
+}
+  </script>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+   	<link rel="stylesheet" href="../js/jquery-ui.min.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/bus.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+  </head>
+  
+  <body>
+  	<div id="grid" nowrap="false"></div>
+  	<div id="too_bar">
+	    <form class="bus_form" id="queryForm">
+	        <table cellspacing="0" cellpadding="0">
+	            <tbody>
+	                <tr>
+	                    <td class="bus_form_subtitle">
+	                    	<span>换乘查询(起点-终点):</span>
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td><input type="text" class="input gap-right-small" placeholder="起点" name="from" id="from"></td>
+	                    <td><span class="gap-right-small bus_exchange" onclick="reverse();"><i class="icon"></i></span></td>
+	                    <td><input type="text" class="input gap-right" placeholder="终点" name="to" id="to"></td>
+	                    <td><a class="btn gap-right-small" onclick="list();" href="javascript:void(0)">查询</a></td>
+	                    <td><span style="font-size: 12px;color: red;margin-left: 5px;">注意：所查询的结果为最多换乘3次的乘车路线</span></td>
+	                </tr>
+	            </tbody>
+	        </table>
+	    </form>
+  	</div>
+  </body>
+<script type="text/javascript">
+$(function(){
+	$.ajax({
+		url:"bus_getStations",
+		type:"post",
+		async:false,
+		success:function(data){
+			$( "#from,#to" ).autocomplete({
+				source:function(request,response){
+					response($.map(data,function(item){
+						var reg = new RegExp("^" + request.term + "\.+$");
+						if(reg.test(item)) return item;
+					}));
+				}
+			});
+		}
+	});
+    $("#grid").datagrid({   
+        fit: true,
+        fitColumns: true,
+        striped: true,
+        rownumbers: true,
+        border: false,
+        pagination: true,
+        singleSelect: true,
+        checkOnSelect: false,
+        selectOnCheck: false,
+        pageSize: 20,
+        pageNumber: 1,
+        toolbar: "#too_bar",
+        columns:[[
+            {field:"transTime",title:"换乘次数",width:10},
+            {field:"route",title:"换乘方案",width:100}
+        ]],
+        onLoadSuccess: function(data){
+        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+        }
+    });
+});
+function reverse(){
+	var from = $("#from").val();
+	var to = $("#to").val();
+	$("#from").val(to);
+	$("#to").val(from);
+}
+function list(){
+	var $form = $("#queryForm").serializeObject();
+	if (!$form||!$form.from) {
+		context.warning("请输入起点名称！");
+		return;
+	}
+	if (!$form||!$form.to) {
+		context.warning("请输入终点名称！");
+		return;
+	}
+	$("#grid").datagrid({url:"bus_getNeedLines",queryParams:$form});
+}
+</script>
+</html>

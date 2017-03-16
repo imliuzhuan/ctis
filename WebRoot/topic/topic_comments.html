@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>城市公交信息管理系统</title>
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+    <style type="text/css">
+        .messageboard div, ul, li {margin: 0;padding: 0;list-style: none;}
+        .messageboard {font-size: 12px;font-family: Arial,'Microsoft YaHei';}
+	    .messageboard ul.form_list {line-height: 2em;margin-top:8px;}
+		.messageboard li.form_item {border-top: 1px solid #ccc;padding: 2em 0 0 0;position: relative;height: 75px;}
+		.messageboard li.form_item div.top {
+			 height: 2em;
+			 background: #f8f8f8;
+			 color: #999;
+			 position:absolute;
+			 width:100%;
+			 left:0;
+			 top:0;
+		 }
+		 .messageboard li.form_item div.top_item {
+			 height: 1.5em;
+			 float: left;
+			 padding: 0 1em 0 0;
+		 }
+		 .messageboard li.form_item div.top_item_first {
+			 color: #333;
+			 padding: 0 1em;
+		 }
+		 .messageboard li.form_item div.top_item_r {
+			 height: 1.5em;
+			 float: right;
+			 padding:0 1em;
+		 }
+		 .messageboard li.form_item div.bottom {
+			 padding: 8px 12px;
+			 position: relative;
+		 }
+		 .messageboard li.form_item ul.bottom_right_list {
+			 float: right;
+			 margin: 15px 0 0 0;
+			 line-height: 1.5em;
+		 }
+         .messageboard li.form_item li.bottom_right_list_item {
+			 float: left;
+			 height: 1.5em;
+			 margin: 0 0.5em 0 0;
+			 cursor: pointer;
+			 border:1px solid transparent;
+			 padding:0 0.5em;
+		 }
+		 .messageboard li.form_item ul.bottom_right_list_item:last-child {
+			 float: left;
+			 padding: 0;
+		 }
+		 .messageboard li.form_item li.bottom_right_list_item:hover {
+			 border: 1px solid #ccc;
+			 padding:0 0.5em;
+			 background-image: linear-gradient(to bottom,#f8f8f8,#efefef);
+			 border-radius:5px;
+		 }
+		 .messageboard li.form_item li.bottom_right_list_item span {
+			 color: #c00;
+		 }
+		 .article{padding:5px 0 10px 0;font-size:12px;}
+		 .article h3{font-size:22px;padding:8px 0 3px 0;margin:0;border-bottom:1px solid #CCC;line-height:24px;}
+		 .article h3 span.time,.article h3 span.author,.article h3 label{font-weight:normal;font-size:12px;color:#CCC;}
+		 .article .content{font-size:14px;font-family: Arial,'Microsoft YaHei';line-height:22px;text-indent:2em;padding:8px 0;}
+		 .article .article-copyright{text-align:right;color:#CCC;margin-top:5px;}
+		 .leaveMessage{line-height:2em;}
+		 .leaveMessage label{width:99.7%;padding-bottom:3px;font-size:16px;font-weight:bold;display:block;background-color:#F3F3F3;border-left:1px solid #CCC;border-right:1px solid #CCC;border-top:1px solid #CCC}
+		 .leaveMessage label span{margin-left:5px;}
+		 .leaveMessage .txtarea{width:99.7%;height:100px;border:1px solid #CCC;padding:5px 0;font-size:14px;font-family: Arial,'Microsoft YaHei';}
+   		  a.submitBtn{text-decoration:none;font-size:15px;letter-spacing:1px;color:#FFF;display:inline-block;height:34px;line-height:32px;width:100px;text-align:center;background:url(../images/comment_btn.png) no-repeat 0 -34px;}
+   		  a.submitBtn:hover{background-position:0 0;}
+		 .optArea{text-align:right;border:10px solid transparent;border-right-width:3px;border-left-width:0;border-bottom-width:3px;}
+    </style>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+</head>
+<body>
+	<div class="article">
+    	<h3>
+        	<span class="title" id="topicName"></span><br />
+            <span class="time" id="topicLastModifyTime"></span>
+            <label>作者：</label><span class="author" id="topicCreator"></span>
+         </h3>
+        <div class="content" id="topicContent"></div>
+        <div class="article-copyright">
+        	本文来源：城市公交信息管理系统
+        </div>
+    </div>
+    <div class="messageboard">
+    	<div class="leaveMessage">
+        	<label for="txtarea"><span>评论内容：</span></label>
+            <textarea class="txtarea" id="commentContent" placeholder="请输入评论内容！" style="resize: none;"></textarea>
+            <div class="optArea">
+            	<a class="submitBtn" href="javascript:void(0)" onclick="addComment();">发表评论</a>
+            </div>
+        </div>
+        <ul class="form_list" id="commentsList"></ul>
+    </div>
+</body>
+<script type="text/javascript">
+var topic;
+$(function(){
+	var id = window.location.href.split("?")[1].split("=")[1];
+	$.ajax({
+		url:"topic_getTopicVO",
+		type:"get",
+		data:{"id":id},
+		async:false,
+		success:function(data){
+			if (data) {
+				topic = data.topic;
+				var comments = data.comments;
+				$("#topicName").text(topic.name);
+				$("#topicLastModifyTime").text(topic.lastModifyTime);
+				$("#topicCreator").text(creator(topic.creator));
+				$("#topicContent").text(topic.content);
+				var _li = "";
+				$.each(comments,function(i,n){
+					_li += "<li class='form_item'>\
+			    		<div class='top'>\
+							<div class='top_item_r'>发表于 "+n.createTime+"</div>\
+							<div class='top_item top_item_first'>"+(i+1)+"楼</div>\
+							<div class='top_item'>"+creator(n.creator)+"</div>\
+						</div>\
+						<div class='bottom'>\
+							<div class='bottom_pic'></div>\
+							<div>"+n.content+"</div>\
+							<ul class='bottom_right_list' id='"+n.id+"'>\
+			    				<li class='bottom_right_list_item' onclick='oper(\""+n.id+"\",\"praise\");'>支持(<span class='praise'>"+n.praise+"</span>)</li>\
+			    				<li class='bottom_right_list_item' onclick='oper(\""+n.id+"\",\"tread\");'>反对(<span class='tread'>"+n.tread+"</span>)</li>\
+							</ul>\
+						</div>\
+					</li>";
+				});
+				if (_li) {
+					$("#commentsList").append($(_li));
+				}
+			} else {
+				context.warning("获取话题信息失败！");
+			}
+		},
+		error:function(data){
+			context.warning("系统异常，请联系管理员！");
+		}
+	});
+});
+function addComment(){
+	var content = $("#commentContent").val();
+	$.ajax({
+		url:"../comments/comments_add",
+		type:"post",
+		data:{"topicId":topic.id,"content":content},
+		success:function(data){
+			if (data&&data=="ok") {
+				context.show("评论成功，管理员审核通过后您才能查看到该条评论！");
+				$("#commentContent").val("");
+			} else {
+				context.warning("评论失败！");
+			}
+		},
+		error:function(data){
+			context.warning("系统异常，请联系管理员！");
+		}
+	});
+}
+
+function oper(id,flag){
+	$.ajax({
+		url:"comments_oper",
+		type:"post",
+		data:{"id":id,"flag":flag},
+		success:function(data){
+			if (data) {
+				if (flag=="praise") {
+					$("#"+id).find("li > span.praise").text(data.praise);
+				}
+				if (flag=="tread") {
+					$("#"+id).find("li > span.tread").text(data.tread);
+				}
+			}
+		}
+	});
+}
+</script>
+</html>

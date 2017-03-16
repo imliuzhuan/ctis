@@ -1,0 +1,44 @@
+<style>
+/* 统一边框样式 */
+.input {
+    border:1px solid #7F9DB9;    
+    padding:2px;
+}
+.top {
+    margin-top:2px;
+}
+/* 统一readonly/disabled的样式 */
+.readonly, input[readonly], input[disabled], textarea[readonly],textarea[disabled] {
+	color:#555;
+	background-color: #e8e8e8;
+}
+/* 获得焦点时边框用红色 */
+.focus, input:focus, select:focus, textarea:focus {
+	outline:red solid 1px;
+} 
+/* 编辑表格的样式 */
+.table-edit {
+	border-collapse: collapse;
+	border-spacing:0;
+}
+.table-edit tr{height:22px;}
+.table-edit td{	
+	border-color:#cccccc;
+	border-style:none none dashed none;
+	border-width:0px 0px 1px 0px;
+	padding:5px;
+}
+/* 修复与easyui冲突的地方 */
+td span.combobox{
+	margin-top:2px;
+}
+</style>
+<form id="form" method="post" >
+	<input type="hidden" id="id" name="id"/>
+	<table class="table-edit"  width="95%" align="center" style="margin:10px;">
+		<tr>
+			<td>角色名称</td>
+			<td><input type="text" name="name" id="name" class="easyui-validatebox input top" required="true"/></td>
+		</tr>
+	</table>
+</form>

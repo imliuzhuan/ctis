@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+
+	<constant name="struts.devMode" value="false" />
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+	<!-- 更改struts2请求Action的后缀名，默认为action。若想去掉后缀，设为","即可 -->
+	<constant name="struts.action.extension" value=","></constant>
+
+	<package name="ctis-struts" abstract="true" extends="json-default"
+		namespace="/">
+		<interceptors>
+			<!-- 注册登陆检查拦截器 -->
+			<interceptor name="loginInter" class="com.ctis.interceptor.LoginInterceptor" />
+			<interceptor-stack name="myInterceptor">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="loginInter" />
+			</interceptor-stack>
+		</interceptors>
+
+		<default-interceptor-ref name="myInterceptor" />
+
+		<!-- 定义全局Result映射 -->
+		<global-results>
+			<result type="json">
+    			<param name="root">data</param>
+    		</result>
+			<!-- <result name="error">/main/error.html</result> -->
+			<!-- 定义login逻辑视图对应的视图资源
+			<result name="login">/login.html</result> -->
+		</global-results>
+
+		<!-- 定义全局异常映射
+		<global-exception-mappings> -->
+			<!-- 当Action中遇到Exception异常时，系统将转入name为error的结果中
+			<exception-mapping exception="java.lang.Exception" result="error"/>
+		</global-exception-mappings> -->
+	</package>
+	
+	<package name="loginAction" namespace="/" extends="json-default">
+		<!-- 用户登录 -->
+		<action name="login" class="loginAction" method="login">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<!-- 用户注册 （只能注册普通用户）-->
+		<action name="register" class="loginAction" method="register">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<action name="logout" class="loginAction" method="logout">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<action name="isPassRight" class="loginAction" method="isPassRight">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<action name="modifyPassword" class="loginAction" method="modifyPassword">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<action name="modifyUserInfo" class="loginAction" method="modifyUserInfo">
+			<result name="success" type="json">
+				<param name="root">data</param>
+			</result>
+		</action>
+		<!-- 生成验证码 -->
+		<action name="vercode" class="loginAction" method="vercode">
+			<result name="vercode" type="stream">
+				<param name="inputName">vercodeStream</param>
+			</result>
+		</action>
+	</package>
+	<package name="menuAction" namespace="/" extends="ctis-struts">
+		<action name="getMenu" class="menuAction" method="getMenu"></action>
+	</package>
+	<package name="busAction" namespace="/bus" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+	<package name="userAction" namespace="/user" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+	<package name="roleAction" namespace="/role" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+	<package name="functionAction" namespace="/function" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+	<package name="topicAction" namespace="/topic" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+	<package name="commentsAction" namespace="/comments" extends="ctis-struts">
+		<action name="*_*" class="{1}Action" method="{2}"></action>
+	</package>
+</struts>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="css/login.css" type="text/css"></link>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="js/tools.js"></script>
+  </head>
+  
+  <body>
+  	<form id="loginForm">
+  		<div id="login">
+    		<p><label for="nickName">用户名：</label><input type="text" id="nickName" name="nickName" class="textbox w150 right"/></p>
+    		<p><label for="password"><span style="letter-spacing: 12px;">密</span>码：</label><input type="password" id="password" name="password" class="textbox w150 right"/></p>
+    		<p><label for="vercode">验证码：</label>
+    			<img alt="验证码" class="vercode" src="vercode" title="点击更换" onclick="this.src='vercode?date='+new Date().getTime()"/>
+    			<input type="text" id="vercode" name="vercode" class="textbox" style="width: 80px;float: right;"/>
+    		</p>
+		</div>
+  	</form>
+  </body>
+  <script type="text/javascript">
+  $(function(){
+	  //用户名
+	  $("#nickName").validatebox({
+		  required : true,
+		  validType: "length[1,30]",
+		  missingMessage : "请输入用户名",
+		  invalidMessage : "用户名长度为1~30！"
+	  });
+	  //密码
+	  $("#password").validatebox({
+		  required : true,
+		  validType : "length[4,30]",
+		  missingMessage : "请输入密码！",
+		  invalidMessage : "密码长度为4~30！"
+	  });
+	  $("#vercode").validatebox({
+		  required : true,
+		  missingMessage : "请输入验证码！",
+		  invalidMessage : "验证码不能为空！"
+	  });
+	  //登陆界面
+	  $("#login").dialog({
+		  closable: false,
+		  draggable: false,
+		  title: "登录后台",
+		  width: 300,
+		  height: 220,
+		  modal: true,
+		  iconCls:"icon-login",
+		  buttons: [
+		             {
+		             id: "loginBtn",
+		             text: "登录",
+		             width: 50,
+		             handler: function () {
+		            	 login();
+		             }
+		         }, {
+		             id: "resetBtn",
+		        	 text: "重置",
+		             width: 50,
+		             handler: function () {
+		            	 $("#login").find("input").val("");
+		             }
+		         }]
+	  });
+	  
+	  $("#loginBtn").before("<span class='register' onclick='register();'>还没有账号，注册&gt;&gt;</span>");
+  });
+  function login(){
+  	if (!$("#nickName").validatebox("isValid")) {
+			$("#nickName").focus();
+		} else if (!$("#password").validatebox("isValid")) {
+			$("#nickName").focus();
+		} else {
+			var nickName=$("#nickName").val();
+			var password=$("#password").val();
+			var vercode=$("#vercode").val();
+			$.ajax({
+				url : "login",
+				type : "post",
+				data : {"nickName":nickName,"password":password,"vercode":vercode},
+				beforeSend : function(){
+					$.messager.progress({
+						text : "正在登录中..."
+					});
+				},
+				success : function(data){
+					$.messager.progress("close");
+					if (data&&data=="ok") {
+						window.location.href = "main/main.html";
+					} else if(data&&data=="up"){
+						context.warning("用户名或密码错误！", function(){
+							$("#password").select();
+						});
+					} else if(data&&data=="vc"){
+						context.warning("验证码错误！", function(){
+							$("#vercode").select();
+						});
+					} else {
+						context.warning("登录失败！", function(){
+							$("#password").select();
+						});
+					}
+				}				
+			});
+		}
+  }
+  function register(){
+	  location.href="main/register.html";
+  }
+  </script>
+</html>

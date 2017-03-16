@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+	
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath:configure.properties</value>
+		</property>
+	</bean>
+	
+	<!-- 启用spring注解支持 -->
+	<context:annotation-config />
+	
+	<!-- 设置spring业务bean的扫描路径 -->
+  	<context:component-scan base-package="com.ctis"></context:component-scan>
+
+	<!-- 定义一个连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="maxActive" value="${maxActive}"/>
+		<property name="maxIdle" value="${maxIdle}"/>
+		<property name="maxWait" value="${maxWait}"/>
+	</bean>
+
+	<!-- 定义Hibernate的SessionFactory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<!-- 指定连接池DataSource -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 指定Hibernate配置参数 -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- 指定数据库方言 -->
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<!-- 是否生成SQL语句 -->
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<!-- 是否美化SQL语句 -->
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<!-- 是否自动建表 -->
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+				<!-- 默认数据库 -->
+				<prop key="hibernate.default_schema">${hibernate.default_schema}</prop>
+			</props>
+		</property>
+		<!-- 使用注解 -->
+		<property name="annotatedClasses">
+			<list>
+				<value>com.ctis.entity.User</value>
+				<value>com.ctis.entity.Bus</value>
+				<value>com.ctis.entity.Comments</value>
+				<value>com.ctis.entity.Function</value>
+				<value>com.ctis.entity.Role</value>
+				<value>com.ctis.entity.Topic</value>
+			</list>
+		</property>
+	</bean>
+	 
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 配置事务增强处理Bean,指定事务管理器 -->
+	<tx:advice id="txadvice" transaction-manager="transactionManager">
+		<!-- 用于配置详细的事务语义 -->
+		<tx:attributes>
+			<tx:method name="get*" read-only="true"/>
+			<tx:method name="init" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="modify*" propagation="REQUIRED" />
+			<!--hibernate4必须配置为开启事务 否则 getCurrentSession()获取不到 -->
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 哪些类哪些方法使用事务 -->
+	<aop:config>
+		<!-- 只对业务逻辑层实施事务 -->
+		<aop:pointcut id="allManagerMethod"
+			expression="execution(* com.ctis.service.*.*(..))" />
+		<aop:advisor pointcut-ref="allManagerMethod" advice-ref="txadvice" />
+	</aop:config>
+</beans>

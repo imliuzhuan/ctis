@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+   	<link rel="stylesheet" href="../js/jquery-ui.min.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/bus.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/query.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+  </head>
+  
+  <body class="easyui-layout">
+  	<div region="center" style="overflow:hidden;">
+	 	<div class="easyui-layout" fit="true">
+			<div region="center" border="false">
+				<div id="grid"></div>
+			  	<div id="too_bar">
+				    <form class="bus_form" id="queryForm">
+				        <table cellspacing="0" cellpadding="0">
+				            <tbody>
+				                <tr>
+				                    <td class="bus_form_subtitle"><span>路线查询(线路名称):</span></td>
+				                </tr>
+				                <tr>
+				                    <td><input type="text" class="input gap-right" name="busCode" id="busCodeForm" placeholder="线路名称"></td>
+				                    <td><a class="btn" onclick="list();" href="javascript:void(0)">查询</a></td>
+				                </tr>
+				            </tbody>
+				        </table>
+				    </form>
+			  	</div>
+			</div>
+			<div region="east" border="false" split="true" style="width:300px;background-color: #F4F4F4;">
+				<form id="busInfoForm">
+				    <input type="hidden" id="id" name="id"/>
+					<table class="table-edit"  width="95%" align="center" style="margin:10px;">
+						<tr>
+							<td>路线编号</td>
+							<td><input type="text" name="busCode" id="busCode" class="easyui-validatebox input2 top" readonly="readonly"/></td>
+						</tr>
+						<tr>
+							<td>首站</td>
+							<td><input type="text" name="firstStation" id="firstStation" class="easyui-validatebox input2 top" readonly="readonly"/></td>
+						</tr>
+						<tr>
+							<td>首站运行起始时间</td>
+							<td><input type="text" name="firstStartTime" id="firstStartTime" class="easyui-timespinner input2 top" readonly="readonly" showSeconds="false"/></td>
+						</tr>
+						<tr>
+							<td>首站运行截止时间</td>
+							<td><input type="text" name="firstEndTime" id="firstEndTime" class="easyui-timespinner input2 top" readonly="readonly" showSeconds="false"/></td>
+						</tr>
+						<tr>
+							<td>末站</td>
+							<td><input type="text" name="lastStation" id="lastStation" class="easyui-validatebox input2 top" readonly="readonly"/></td>
+						</tr>
+						<tr>
+							<td>末站运行起始时间</td>
+							<td><input type="text" name="lastStartTime" id="lastStartTime" class="easyui-timespinner input2 top" readonly="readonly" showSeconds="false"/></td>
+						</tr>
+						<tr>
+							<td>末站运行截止时间</td>
+							<td><input type="text" name="lastEndTime" id="lastEndTime" class="easyui-timespinner input2 top" readonly="readonly" showSeconds="false"/></td>
+						</tr>
+						<tr>
+							<td>全程票价</td>
+							<td><input type="text" name="price" id="price" class="easyui-validatebox input2 top" readonly="readonly"/></td>
+						</tr>
+						<tr>
+							<td>上行各站站名</td>
+							<td>
+								<textarea name="upStations" id="upStations" class="easyui-validatebox textarea" readonly="readonly"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td>下行各站站名</td>
+							<td>
+								<textarea name="downStations" id="downStations" class="easyui-validatebox textarea" readonly="readonly"></textarea>
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</div>
+	</div>
+  </body>
+<script type="text/javascript">
+$(function(){
+	$.ajax({
+		url:"bus_getBusCodes",
+		type:"post",
+		async:false,
+		success:function(data){
+			$( "#busCodeForm" ).autocomplete({
+				source:function(request,response){
+					response($.map(data,function(item){
+						var reg = new RegExp("^" + request.term + "\.+$");
+						if(reg.test(item)) return item;
+					}));
+				}
+			});
+		}
+	});
+    $("#grid").datagrid({   
+        fit: true,
+        fitColumns: true,
+        striped: true,
+        rownumbers: true,
+        border: false,
+        pagination: true,
+        singleSelect: true,
+        checkOnSelect: false,
+        selectOnCheck: false,
+        pageSize: 20,
+        pageNumber: 1,
+        toolbar: "#too_bar",
+        columns:[[
+			{field:"id", title:"",hidden:true},
+            {field:"busCode",title:"路线编号",sortable:true},
+            {field:"firstAndEnd",title:"首站末站",formatter:firstAndEnd,width:100,hidden:true},
+            {field:"workTime",title:"发车时间",formatter:workTime,width:100},
+            {field:"price",title:"全程票价",width:100},
+            {field:"upStations",title:"上行各站站名",width:100},
+            {field:"downStations",title:"下行各站站名",width:100},
+            {field:"createTime",title:"创建时间",hidden:true},
+            {field:"firstStation",title:"首站",hidden:true},
+            {field:"firstStartTime",title:"首站运行起始时间",hidden:true},
+            {field:"firstEndTime",title:"首站运行截止时间",hidden:true},
+            {field:"lastStation",title:"末站",hidden:true},
+            {field:"lastStartTime",title:"末站运行起始时间",hidden:true},
+            {field:"lastEndTime",title:"末站运行截止时间",hidden:true},
+            {field:"creator",title:"创建者",hidden:true},
+            {field:"modifyTime",title:"修改时间",hidden:true},
+            {field:"modifier",title:"修改者",hidden:true}
+        ]],
+        onLoadSuccess: function(data){
+        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+        },
+        onClickRow:function(index,row){
+			$("#busInfoForm").fillForm(row);
+			$("#firstStartTime").timespinner("setValue",row.firstStartTime);
+			$("#firstEndTime").timespinner("setValue",row.firstEndTime);
+			$("#lastStartTime").timespinner("setValue",row.lastStartTime);
+			$("#lastEndTime").timespinner("setValue",row.lastEndTime);
+        }
+    });
+});
+function list(){
+	var $form = $("#queryForm").serializeObject();
+	if (!$form||!$form.busCode) {
+		context.warning("请输入线路名称！");
+		return;
+	}
+	$("#grid").datagrid({url:"bus_list",queryParams:$form});
+}
+</script>
+</html>

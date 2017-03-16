@@ -1,0 +1,19 @@
+<div id="dialogGrid"></div>
+<div id="dialog_too_bar" style="padding: 5px;">
+	<div style="padding: 0 0 0 7px;color: #333">
+	 	<form id="dialogQueryForm">
+	 	<input type="hidden" name="funcIds" id="funcIds">
+	  	功能名称：<input type="text" class="textbox" name="name" style="width: 110px;">
+			<a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="dialogList();">查询</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" onclick="dialogReset();">重置</a>
+	 	</form>
+	</div>
+</div>
+<script type="text/javascript">
+function dialogList(){
+	$("#dialogGrid").datagrid("load",$("#dialogQueryForm").serializeObject());
+}
+function dialogReset(){
+	$("#dialogQueryForm").find("input").val("");
+}
+</script>

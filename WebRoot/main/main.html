@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+    <link href="../css/default.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../js/themes/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="../js/themes/icon.css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css"></link>
+    <style type="text/css">
+    .td {
+    	font-size: 18px;
+    	width: 170px;
+    	height: 20px;
+    	font-family: sans-serif;
+    }
+    .right {
+    	border-bottom: 1px solid black;
+    }
+    </style>
+    <script type="text/javascript" src="../js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.easyui.js"></script>
+	<script type="text/javascript" src="../js/main.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+</head>
+<body class="easyui-layout" style="overflow-y: hidden;"  scroll="no">
+	
+	<noscript>
+		<div style=" position:absolute; z-index:100000; height:2046px;top:0px;left:0px; width:100%; background:white; text-align:center;">
+		    <img src="../images/noscript.gif" alt='抱歉，请开启脚本支持！' />
+		</div>
+	</noscript>
+    <div region="north" border="true" class="cs-north">
+		<div class="cs-north-bg">
+			<div class="cs-north-logo"></div>
+			<div class="cs-north-right">
+				<div id="bgclock" style="margin: 2px 0 5px 12px;font-size: 14px;"></div>
+	   			<a style="color: black;text-decoration: none;font-size: 14px;vertical-align: middle;">欢迎您，<span style="font-size: 14px;" id="userName"></span>！</a>
+				<a icon="icon-remove-logout" class="easyui-linkbutton link-menu" plain="true" onclick="logout();">注销</a>
+				<a icon="icon-help-manager" href="#" class="easyui-menubutton link-menu" menu="#topbar-menu" >管理</a>
+				<div id="topbar-menu" style="width:150px;">
+				    <div icon="icon-info" onclick="editUserInfo()">修改个人信息</div>
+				    <div icon="icon-key" onclick="midifyPassword()">修改口令</div>
+				    <div class="menu-sep"></div>
+				    <div icon="icon-reload" onclick="refreshSystem()">刷新</div>
+				    <div class="menu-sep"></div>
+				    <div icon="icon-help" onclick="showAbout()">关于</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div region="south" split="true" style="height: 30px; background: #D2E0F2; ">
+        <div class="footer">版权所有：李倩倩 Copyright &copy;2015-2020 All Rights Reserved</div>
+    </div>
+    <div region="west" split="true" title="导航菜单" style="width:180px;" id="west">
+		<div class="easyui-accordion" fit="true" border="false" >
+		<!--  导航内容 -->
+		</div>
+    </div>
+    <div id="mainPanle" region="center" style="background: #eee; overflow-y:hidden">
+        <div id="tabs" class="easyui-tabs"  fit="true" border="false" >
+			<div title="主页" style="padding:20px;overflow:hidden;background-color: white;" id="home" >
+				<h1 style="font-size: 2em;font-family: sans-serif;">欢迎使用城市公交信息管理系统！</h1>
+				<div style="margin-left: 20px;">
+					<table>
+						<tr>
+							<td class="td">毕业设计论文题目：</td>
+							<td class="td right">城市公交管理系统</td>
+						</tr>
+						<tr>
+							<td class="td">教学院：</td>
+							<td class="td right">计算机学院</td>
+						</tr>
+						<tr>
+							<td class="td">专业班级：</td>
+							<td class="td right">网络工程</td>
+						</tr>
+						<tr>
+							<td class="td">学生姓名：</td>
+							<td class="td right">李倩倩</td>
+						</tr>
+						<tr>
+							<td class="td">学号：</td>
+							<td class="td right">201140420132</td>
+						</tr>
+						<tr>
+							<td class="td">指导教师：</td>
+							<td class="td right">伍红华</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+    </div>
+    
+	<div id="mm" class="easyui-menu" style="width:150px;">
+		<div id="mm-tabclose">关闭</div>
+		<div id="mm-tabcloseall">全部关闭</div>
+		<div id="mm-tabcloseother">除此之外全部关闭</div>
+		<div class="menu-sep"></div>
+		<div id="mm-tabcloseright">当前页右侧全部关闭</div>
+		<div id="mm-tabcloseleft">当前页左侧全部关闭</div>
+		<div class="menu-sep"></div>
+		<div id="mm-exit">退出</div>
+	</div>
+	<div id="edit_user_info"></div>
+	<div id="modify_password"></div>
+</body>
+    <script type="text/javascript">
+    var userInfo;
+    $(document).ready(function(){
+    	getUserInfo();
+    	//给欢迎页title前面加一个小房子图标
+    	$("#tabs").find("span").addClass("tabs-title tabs-with-icon").parent().append("<span class='tabs-icon icon-house'></span>");
+    	//给导航菜单前面增加一个小地球图标
+    	$("#west").prev().children().first().addClass("panel-title panel-with-icon").after("<div class='panel-icon icon-world'></div>");
+    });
+    function getUserInfo(){
+    	$.ajax({
+    		url:"../user/user_getUserInfo",
+    		type:"post",
+    		async:false,
+    		success:function(data){
+    			if (data) {
+    				userInfo = data;
+    				$("#userName").text(data.userName);
+    			} else {
+    				$.messager.alert("系统提示","获取用户信息失败！","warning");
+    			}
+    		},
+    		error:function(data){
+    			$.messager.alert("系统提示","系统异常，请联系管理员！","warning");
+    		}
+    	});
+    }
+    function showAbout(){
+    	$.messager.alert("城市公交信息管理系统","设计: 李倩倩<br/>邮箱: 1508494311@qq.com");
+    }
+    function logout(){
+    	$.messager.confirm("系统提示", "您确定要退出本次登录吗?", function(flag) {
+    		if (flag) {
+    			$.ajax({
+    				url:"../logout",
+    				type:"get",
+    				success:function(data){
+    					if (data&&data=="ok") {
+    						window.location.href = "../login.html";
+						}
+    				}
+    			});
+			}
+    	});
+    }
+    function editUserInfo(){
+    	$("#edit_user_info").dialog({
+    	    title: "修改个人信息",
+    	    href: "edit_user_info.html",
+    	    height:260,
+    	    width:300,
+    	    onLoad: function(){
+    	    	getUserInfo();
+    	    	if(userInfo) {
+    	    		$("#userForm").fillForm(userInfo);
+    	    		userInfo = null;
+    	    	}
+    	    },
+    	    buttons:[
+    	    	{
+    	    		text:"确定",
+    	    		//iconCls:"icon-save",
+    	    		handler:function(){
+    	    			$("#userForm").form("submit",{
+    	    				url:"../modifyUserInfo",
+    	    				onSubmit:function(){
+    	    					return $(this).form("validate");
+    	    				},
+    	    				success:function(data){
+    	    					if (data) {
+    	    						userInfo = data;
+    	    	    				$("#userName").text(data.userName);
+    	        	    			$("#edit_user_info").dialog("close");
+    	    						context.show("用户信息修改成功！");
+    							} else {
+    	  	    					context.warning("用户信息修改失败！");
+    							}
+    	    				},
+    	    				error: function(data){
+    	    					context.warning("系统异常,请联系管理员!");
+    	    				}
+    	    			});
+    	    		}
+    	    	},
+    	    	{
+    	    		text:"关闭",
+    	    		//iconCls:"icon-cancel",
+    	    		handler:function(){
+    	    			$("#edit_user_info").dialog("close");
+    	    		}
+    	    	}
+    	    ]
+    	});
+    }
+    
+    //打开修改密码对话框
+    function midifyPassword() {
+    	$("#modify_password").dialog({
+    	    title: "修改密码",
+    	    href: "modify_password.html",
+    	    height:200,
+    	    width:300,
+    	    onClose: function(){
+    	    	$("#passwordForm").clearForm();
+    	    },
+    	    buttons:[
+    	    	{
+    	    		text:"确定",
+    	    		//iconCls:"icon-save",
+    	    		handler:function(){
+    					var oldPass = $("#oldPass").val();
+    					var newPass = $("#newPass").val();
+    					var password = $("#password").val();
+						if (!oldPass) {
+							context.warning("请输入原密码！");
+							$("#oldPass").select();
+							return;
+						}
+						var isPassRight = true;
+						$.ajax({
+							url:"../isPassRight",
+							type:"post",
+							data:{"oldPass":oldPass},
+							async:false,
+							success:function(data){
+								if(!data||data!="ok"){
+									isPassRight = false;
+								}
+							}
+						});
+						if(!isPassRight) {
+							context.warning("原密码错误，请重新输入！");
+							$("#oldPass").select();
+							return;
+						};
+    			        if (newPass != password) {
+    			            context.warning("两次输入密码不一致，请重新输入！");
+    			            $("#newPass").select();
+    			            return;
+    			        }
+    			        $.ajax({
+							url:"../modifyPassword",
+							type:"post",
+							data:{"password":password},
+							async:false,
+							success:function(data){
+    	    					if (data&&data=="ok") {
+    	        	    			$("#modify_password").dialog("close");
+    	  	    					context.show("恭喜，密码修改成功！<br>您的新密码为："+password);
+    							} else {
+    	  	    					context.warning("密码修改失败！");
+    							}
+							},
+    	    				error: function(data){
+    	    					context.warning("系统异常,请联系管理员!");
+    	    				}
+						});
+    	    		}
+    	    	},
+    	    	{
+    	    		text:"关闭",
+    	    		//iconCls:"icon-cancel",
+    	    		handler:function(){
+    	    			$("#modify_password").dialog("close");
+    	    		}
+    	    	}
+    	    ]
+    	});
+    }
+
+    function refreshSystem(){
+    	location.reload();
+    }
+    </script>
+</html>

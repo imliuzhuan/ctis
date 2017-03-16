@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/main.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+  </head>
+  
+  <body>
+    <div id="grid"></div>
+    <div id="too_bar" style="padding: 5px;">
+    	<div style="margin-bottom: 5px;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="oper('add');">添加</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="oper('modify');">修改</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="del();">删除</a>
+    	</div>
+    	<div style="padding: 0 0 0 7px;color: #333">
+	    	<form id="queryForm">
+		    	用户名：<input type="text" class="textbox" name="userName" style="width: 110px;">
+	    		用户昵称：<input type="text" class="textbox" name="nickName" style="width: 110px;">
+    			<a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="list();">查询</a>
+    			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" onclick="reset();">重置</a>
+	    	</form>
+    	</div>
+    </div>
+  </body>
+<script type="text/javascript">
+$(function(){
+	$("#grid").datagrid({   
+        url: "user_list",
+        fit: true,
+        fitColumns: true,
+        striped: true,
+        rownumbers: true,
+        border: false,
+        pagination: true,
+        singleSelect: true,
+        pageSize: 20,
+        pageNumber: 1,
+        toolbar: "#too_bar",
+        columns:[[
+			{field:"id", title:"",hidden:true},
+	        {field:"userName",title:"用户名", width: 100},
+	        {field:"nickName",title:"昵称", width: 100},
+	        {field:"gender",title:"性别",formatter: gender, width: 100},
+	        {field:"telephone",title:"电话", width: 100},
+	        {field:"email",title:"电子邮件", width: 100},
+	        {field:"createTime",title:"创建时间", width: 100},
+	        {field:"roleIds",title:"拥有角色",formatter: haveroles, width: 100},
+	        {field:"isSys",title:"是否系统管理员",formatter: yesorno, width: 100}
+        ]],
+        onLoadSuccess: function(data){
+        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+        }
+    });
+});
+//增加或修改
+function oper(oper){
+	var $select = $("#grid").datagrid("getSelected");
+	if (oper == "modify" && !$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	context.dialog({
+	    title: (oper == "add" ? "增加" : "修改") + "用户信息",
+	    href: "user_detail.html",
+	    height:300,
+	    width:600,
+	    onLoad: function(){
+	    	if(oper == "modify") {
+	    		var $row = $("#grid").datagrid("getSelected");
+	    		$("#form").fillForm($row);
+	    		$("#gender").combobox ("setValue",$row.gender);
+	    		$("#roleIds").combobox("setValues",$row.roleIds);
+	    	}
+	    },
+	    buttons:[
+	    	{
+	    		text:"保存",
+	    		iconCls:"icon-save",
+	    		handler:function(){
+	    			if ($(this).form("validate")) {
+	    				var $form = $("#form").serializeObject();
+	    				if ($form.roleIds&&$form.roleIds.length>0&&typeof($form.roleIds)!="string") {
+	    					$form.roleIds = $form.roleIds.join(",");
+						}
+	    				$.ajax({
+		    				url:"user_" + oper,
+		    				type:"post",
+		    				data:$form,
+		    				async:false,
+		    				success:function(data){
+		    					if (data&&data=="ok") {
+		    						context.closeDialog();
+		  	    					context.show((oper == "add" ? "增加" : "修改") + "成功！");
+		  	    					$("#grid").datagrid("reload");
+								} else {
+									context.closeDialog();
+		  	    					context.warning((oper == "add" ? "增加" : "修改") + "失败！");
+		  	    					$("#grid").datagrid("reload");
+								}
+		    				},
+		    				error:function(data){
+		    					context.warning("系统异常,请联系管理员!");
+		    				}
+		    			});
+					}
+	    		}
+	    	},
+	    	{
+	    		text:"关闭",
+	    		iconCls:"icon-cancel",
+	    		handler:function(){
+	    			context.closeDialog();
+	    		}
+	    	}
+	    ]
+	});
+}
+function del(){
+	var $select = $("#grid").datagrid("getSelected");
+	if (!$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	if ($select.isSys=="1") {
+		context.warning("您不能删除系统管理员！");
+		return;
+	}
+	context.confirm("确认删除？", function(){
+		$.ajax({
+			type:"post",
+			url:"user_delete",
+			data:$("#grid").datagrid("getSelected"),
+			success:function(data){
+				context.show("删除成功！");
+				$("#grid").datagrid("reload");
+			}
+		});
+	});
+}
+function list(){
+	$("#grid").datagrid("load",$("#queryForm").serializeObject());
+}
+function reset(){
+	$("#queryForm").find("input").val("");
+}
+</script>
+</html>

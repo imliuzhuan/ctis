@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/bus.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+	<script type="text/javascript" src="../js/formatter.js"></script>
+  </head>
+  
+  <body>
+    <div id="grid"></div>
+    <div id="too_bar" style="padding: 5px;">
+    	<div style="margin-bottom: 5px;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="oper('add');">添加</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-init" plain="true" onclick="init();">初始化</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="oper('modify')">修改</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="del();">删除</a>
+    	</div>
+    	<div style="padding: 0 0 0 7px;color: #333">
+	    	<form id="queryForm">
+	    		路线编号：<input type="text" class="textbox" name="busCode" style="width: 110px;">
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-search" style="height: 18px;" onclick="list();">查询</a>
+	   			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" style="height: 18px;" onclick="reset();">重置</a>
+	   		</form>
+    	</div>
+    </div>
+  </body>
+  <script type="text/javascript">
+  $(function(){
+	    $("#grid").datagrid({   
+	        url: "bus_list",
+	        fit: true,
+	        fitColumns: true,
+	        striped: true,
+	        rownumbers: true,
+	        border: false,
+	        pagination: true,
+	        singleSelect: true,
+	        checkOnSelect: false,
+	        selectOnCheck: false,
+	        pageSize: 20,
+	        pageNumber: 1,
+	        toolbar: "#too_bar",
+	        columns:[[
+				{field:"id", title:"", checkbox: true},
+	            {field:"busCode",title:"路线编号",sortable:true},
+	            {field:"firstAndEnd",title:"首站末站",formatter:firstAndEnd,width:100},
+	            {field:"workTime",title:"发车时间",formatter:workTime,width:100},
+	            {field:"price",title:"全程票价",width:100},
+	            {field:"upStations",title:"上行各站站名",width:100},
+	            {field:"downStations",title:"下行各站站名",width:100},
+	            {field:"createTime",title:"创建时间",sortable:true},
+	            {field:"firstStation",title:"首站",hidden:true},
+	            {field:"firstStartTime",title:"首站运行起始时间",hidden:true},
+	            {field:"firstEndTime",title:"首站运行截止时间",hidden:true},
+	            {field:"lastStation",title:"末站",hidden:true},
+	            {field:"lastStartTime",title:"末站运行起始时间",hidden:true},
+	            {field:"lastEndTime",title:"末站运行截止时间",hidden:true},
+	            {field:"creator",title:"创建者",hidden:true},
+	            {field:"modifyTime",title:"修改时间",hidden:true},
+	            {field:"modifier",title:"修改者",hidden:true}
+	        ]],
+	        onLoadSuccess: function(data){
+	        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+	        },
+	        onLoadError: function(data){
+	        }
+	    });
+	});
+  function init(){
+	  context.confirm("此操作将删掉所有公交数据，并重新生成新的数据，确定要初始化吗？",function(){
+		  $.ajax({
+			  url: "bus_init",
+			  type: "post",
+			  success: function(data){
+				  if (data&&data=="ok") {
+					  context.show("数据初始化完成！");
+					  $("#grid").datagrid("reload");
+				  } else {
+					  context.alert("数据初始化失败！");
+				  }
+			  },
+			  error: function(data){
+				  context.warning("系统异常,请联系管理员!");
+			  }
+		  });
+	  });
+  }
+  //增加或修改
+  function oper(oper){
+	var $select = $("#grid").datagrid("getSelected");
+	if (oper == "modify" && !$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+  	context.dialog({
+  	    title: (oper == "add" ? "增加" : "修改") + "公交车信息",
+  	    href: "bus_detail.html",
+  	    width:700,
+  	    height:360,
+  	    onLoad: function(){
+  	    	if(oper == "modify") {
+  	    		$("#form").fillForm($select);
+  	    		$("#firstStartTime").timespinner("setValue", $select.firstStartTime);
+  	    		$("#firstEndTime").timespinner("setValue", $select.firstEndTime);
+  	    		$("#lastStartTime").timespinner("setValue", $select.lastStartTime);
+  	    		$("#lastEndTime").timespinner("setValue", $select.lastEndTime);
+  	    	}
+  	    },
+  	    buttons:[
+  	    	{
+  	    		text:"保存",
+  	    		iconCls:"icon-save",
+  	    		handler:function(){
+  	    			$("#form").form("submit",{
+  	    				url:"bus_" + oper,
+  	    				onSubmit:function(){
+  	    					return $(this).form("validate");
+  	    				},
+  	    				success:function(data){
+  	    					if (data&&$.parseJSON(data)=="ok") {
+  	    						context.closeDialog();
+  	  	    					context.show((oper == "add" ? "增加" : "修改") + "成功！");
+  	  	    					$("#grid").datagrid("reload");
+							} else {
+								context.closeDialog();
+	  	    					context.warning((oper == "add" ? "增加" : "修改") + "失败！");
+	  	    					$("#grid").datagrid("reload");
+							}
+  	    				},
+  	    				error: function(data){
+  	    					context.warning("系统异常,请联系管理员!");
+  	    				}
+  	    			});
+  	    		}
+  	    	},
+  	    	{
+  	    		text:"关闭",
+  	    		iconCls:"icon-cancel",
+  	    		handler:function(){
+  	    			context.closeDialog();
+  	    		}
+  	    	}
+  	    ]
+  	});
+  }
+  	
+  //删除
+  function del() {
+	var $checked = $("#grid").datagrid("getChecked");
+	if (!$checked || $checked.length == 0) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	var ids="";
+	$.each($checked,function(i,n){
+		ids += "ids=" + n.id + "&";
+	});
+	if (ids.length>0) {
+		ids = ids.substring(0, ids.length-1);
+	}
+  	context.confirm("确认删除？", function(){
+  		$.ajax({
+  			type:"post",
+  			url:"bus_deleteMore",
+  			data:ids,
+  			success:function(data){
+  				if (data&&data=="ok") {
+  					context.show("删除成功！");
+  	  				$("#grid").datagrid('reload');
+				} else {
+					context.alert("删除失败！");
+				}
+  			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+  		});
+  	});
+  }
+function list(){
+	$("#grid").datagrid("load",$("#queryForm").serializeObject());
+}
+function reset(){
+	$("#queryForm").find("input").val("");
+}
+  </script>
+</html>

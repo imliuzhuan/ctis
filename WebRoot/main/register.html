@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/login.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+  </head>
+  
+  <body>
+  	<form id="form">
+  		<div id="register">
+    		<p><label for="userName"><span style="letter-spacing: 6px;">用户</span>名：</label><input type="text" id="userName" name="userName" class="easyui-validatebox textbox w150 right2" required="true" data-options="validType:['safestr','length[0,9]']"/></p>
+    		<p><label for="nickName"><span style="letter-spacing: 24px;">昵</span>称：</label><input type="text" id="nickName" name="nickName" class="easyui-validatebox textbox w150 right2" required="true" data-options="validType:['safestr','length[0,9]']"/></p>
+    		<p><label for="password1">设置密码：</label><input type="password" id="password1" name="password1" class="easyui-validatebox textbox w150 right2" required="true" data-options="validType:['safestr','length[0,9]']"/></p>
+    		<p><label for="password">确认密码：</label><input type="password" id="password" name="password" class="easyui-validatebox textbox w150 right2" required="true" validType="equalTo['#password1']"/></p>
+    		<p><label for="telephone"><span style="letter-spacing: 24px;">电</span>话：</label><input type="text" id="telephone" name="telephone" class="easyui-validatebox textbox w150 right2" validType="telephone"/></p>
+    		<p><label for="email">电子邮件：</label><input type="text" id="email" name="email" class="easyui-validatebox textbox w150 right2" validType="email"/></p>
+    		<p>
+    			<label for="gender"><span style="letter-spacing: 24px;">性</span>别：</label>
+				<select name="gender" id="gender" class="textbox w155 right2">
+					<option value="0">女</option>
+					<option value="1">男</option>
+				</select>
+    		</p>
+		</div>
+  	</form>
+  </body>
+  <script type="text/javascript">
+  $(function(){
+	  //登陆界面
+	  $("#register").dialog({
+		  closable: false,
+		  draggable: false,
+		  title: "用户注册",
+		  width: 300,
+		  height: 360,
+		  modal: true,
+		  iconCls:"icon-register",
+		  buttons: [
+		             {
+		             id: "registerBtn",
+		             text: "提交",
+		             width: 50,
+		             handler: function () {
+		            	 	$.ajax({
+		            	 		url : "register",
+		            	 		type : "post",
+		            	 		data : {
+		            	 			"userName" : $("#userName").val(),
+		            	 			"nickName" : $("#nickName").val(),
+		            	 			"password" : $("#password").val(),
+		            	 			"telephone" : $("#telephone").val(),
+		            	 			"email" : $("#email").val(),
+		            	 			"gender" : $("#gender").val()
+		            	 		},
+		            	 		async : false,
+		            	 		success : function(data){
+			    					if (data&&data=="ok") {
+			  	    					context.confirm("注册成功，要登录吗？",function(){
+				  	    					window.location.href="../login.html";
+			  	    					});
+									} else {
+			  	    					context.warning("注册失败！");
+									}
+		            	 		},
+		            	 		error : function(data){
+			    					context.warning("系统异常,请联系管理员!");
+		            	 		}
+		            	 	});
+		             }
+		         }, {
+		             id: "resetBtn",
+		        	 text: "重置",
+		             width: 50,
+		             handler: function () {
+		            	 $("#register").find("input").val("");
+		             }
+		         }]
+	  });
+	  
+	  $("#registerBtn").before("<span class='register' onclick='login();'>已有账号，登录&gt;&gt;</span>");
+  });
+  function login(){
+	  location.href="../login.html";
+  }
+  </script>
+</html>

@@ -1,0 +1,179 @@
+@CHARSET "UTF-8";
+
+html,body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+body {
+	font: 14px/22px "微软雅黑", Verdana, Geneva, sans-serif;
+}
+
+input,select,button,form,fieldset,p,ul,li,dl,dt,dd {
+	margin: 0;
+	padding: 0;
+}
+
+img {
+	display: block;
+	border: none;
+}
+
+ul {
+	list-style: none;
+}
+
+.clear {
+	height: 0;
+	line-heihgt: 0;
+	font-size: 0;
+	overflow: hidden;
+	clear: both;
+}
+
+a {
+	text-decoration: none;
+	color: #333;
+	outline: none;
+}
+
+.queryform {
+	padding: 0px 5px 10px 5px;
+	border-bottom: 1px dashed #CCC;
+}
+
+.queryform .fline {
+	margin-top: 8px;
+}
+
+.queryform label.lbl1 {
+	display: block;
+	float: left;
+	width: 160px;
+}
+
+ul.lbllist {
+	margin-left: 160px;
+}
+
+ul.lbllist li {
+	float: left;
+	margin-right: 5px;
+}
+
+ul.lbllist li a {
+	display: block;
+	width: 26px;
+	height: 25px;
+	line-height: 25px;
+	text-align: center;
+	font-weight: bold;
+	text-decoration: none;
+	color: #333;
+	background: url(../images/bus_bg.png) no-repeat 0 0;
+}
+
+ul.lbllist li a:hover {
+	background-image: url(../images/bus_bg_hover.png);
+	color: #D40000;
+}
+
+.querylist {
+	margin-top: 1px;
+	padding-top: 8px;
+}
+
+.buslist {
+	line-height: 30px;
+	/*border:1px solid #CCC;*/
+	padding: 0px 0px 5px 0px;
+}
+
+.buslist dl,.buslist dt,.buslist dd {
+	float: left;
+	clear: both;
+}
+
+.buslist dt {
+	width: 22px;
+	height: 22px;
+	line-height: 22px;
+	text-align: center;
+	font-weight: bold;
+	color: #333;
+	border: 1px solid #CCC;
+	background-color: #F0F0F0;
+	margin-left: 5px;
+}
+
+.buslist dl {
+	margin-top: 8px;
+	border-bottom: 1px solid #CCC;
+	width: 100%;
+}
+
+.buslist dl dd {
+	margin-top: 12px;
+}
+
+.buslist dl dd a {
+	float: left;
+	width: 120px;
+	height: 25px;
+	line-height: 25px;
+	margin-left: 5px;
+	background-color: #F3F3F3;
+	margin-bottom: 8px;
+	text-align: center;
+	margin-right: 15px;
+	border: 1px solid #CCC;
+}
+
+.buslist dl dd a:hover {
+	background-color: #EDF1FC;
+	border-color: #0066CC;
+	color: #0066CC;
+}
+
+/* 统一边框样式 */
+.input {
+	border: 1px solid #7F9DB9;
+	padding: 2px;
+	border-radius: 5px;
+	height: 16px;
+}
+
+.textarea {
+	border: 1px solid #7F9DB9;
+	border-radius: 5px;
+	font-size: 12px;
+	width: 151px;
+	height: 88px;
+	resize: none;
+}
+
+.top {
+	margin-top: 2px;
+}
+/* 编辑表格的样式 */
+.table-edit {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.table-edit tr {
+	height: 22px;
+}
+
+.table-edit td {
+	border-color: #cccccc;
+	border-style: none none dashed none;
+	border-width: 0px 0px 1px 0px;
+	padding: 5px;
+}
+/* 修复与easyui冲突的地方 */
+td span.combobox {
+	margin-top: 2px;
+}

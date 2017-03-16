@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>城市公交信息管理系统</title>
+   	<meta charset="UTF-8">
+  	<link rel="stylesheet" href="../js/themes/default/easyui.css" type="text/css"></link>
+	<link rel="stylesheet" href="../js/themes/icon.css" type="text/css"></link>
+	<link rel="stylesheet" href="../css/main.css" type="text/css"></link>
+	<script type="text/javascript" src="../js/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../js/tools.js"></script>
+	<script type="text/javascript" src="../js/myvalidatebox.js"></script>
+	<script type="text/javascript" src="../js/datagrid.js"></script>
+  </head>
+  
+  <body class="easyui-layout">
+    <div id="too_bar1" style="padding: 5px;">
+    	<div style="margin-bottom: 5px;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="oper('add');">添加</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="oper('modify');">修改</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="del();">删除</a>
+    	</div>
+    	<div style="padding: 0 0 0 7px;color: #333">
+	    	<form id="queryForm">
+		    	角色名称：<input type="text" class="textbox" name="name" style="width: 110px;">
+    			<a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="list();">查询</a>
+    			<a href="#" class="easyui-linkbutton" iconCls="icon-redo" onclick="reset();">重置</a>
+	    	</form>
+    	</div>
+    </div>
+   	<div id="too_bar2" style="padding: 5px;">
+    	<div style="margin: 12px 0;">
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="addFuncs();">增加权限</a>
+    		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="delFuncs()">删除权限</a>
+    	</div>
+   	</div>
+	<div region="center" style="overflow:hidden;">
+	 	<div class="easyui-layout" fit="true">
+			<div region="center" border="false">
+				<div id="grid1"></div>
+			</div>
+			<div region="east" border="false" split="true" style="width:60%;">
+				<div id="grid2"></div>
+			</div>
+		</div>
+	</div>
+  </body>
+<script type="text/javascript">
+$(function(){
+	$("#grid1").datagrid({   
+        url: "role_list",
+        fit: true,
+        fitColumns: true,
+        striped: true,
+        rownumbers: true,
+        border: false,
+        pagination: true,
+        singleSelect: true,
+        pageSize: 20,
+        pageNumber: 1,
+        toolbar: "#too_bar1",
+        columns:[[
+			{field:"id", title:"角色编号", width: 100},
+	        {field:"name",title:"角色名称",sortable:true, width: 100},
+	        {field:"funcIds",title:"",hidden:true},
+	        {field:"privilegeIds",title:"",hidden:true}
+        ]],
+        onClickRow:function(index,row){
+        	$("#grid2").datagrid("load",row);
+        },
+        onLoadSuccess: function(data){
+        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+        }
+    });
+    $("#grid2").datagrid({   
+        url: "role_getFuncs",
+        fit: true,
+        fitColumns: true,
+        striped: true,
+        rownumbers: true,
+        border: false,
+        pagination: true,
+        pageSize: 20,
+        pageNumber: 1,
+        toolbar: "#too_bar2",
+        columns:[[
+			{field:"id", title:"", checkbox: true},
+	        {field:"name",title:"功能名称",sortable:true, width: 80},
+			{field:"funOrder", title:"排序",hidden:true},
+			{field:"funcGroup", title:"功能分组",sortable:true, width: 80},
+			{field:"icon16", title:"模块图标",sortable:true, width: 80},
+			{field:"url", title:"页面地址",sortable:true, width: 100}
+        ]],
+        onLoadSuccess: function(data){
+        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+        }
+    });
+});
+//增加或修改
+function oper(oper){
+	var $select = $("#grid1").datagrid("getSelected");
+	if (oper == "modify" && !$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	context.dialog({
+	    title: (oper == "add" ? "增加" : "修改") + "角色信息",
+	    href: "role_detail.html",
+	    height:150,
+	    width:300,
+	    onLoad: function(){
+	    	if(oper == "modify") {
+	    		$("#form").fillForm($("#grid1").datagrid("getSelected"));
+	    	}
+	    },
+	    buttons:[
+	    	{
+	    		text:"保存",
+	    		iconCls:"icon-save",
+	    		handler:function(){
+	    			$("#form").form("submit",{
+	    				url:"role_" + oper,
+	    				onSubmit:function(){
+	    					return $(this).form("validate");
+	    				},
+	    				success:function(data){
+	    					if (data&&$.parseJSON(data)=="ok") {
+	    						context.closeDialog();
+	  	    					context.show((oper == "add" ? "增加" : "修改") + "成功！");
+	  	    					$("#grid1").datagrid("reload");
+							} else {
+								context.closeDialog();
+	  	    					context.warning((oper == "add" ? "增加" : "修改") + "失败！");
+	  	    					$("#grid1").datagrid("reload");
+							}
+	    				},
+	    				error: function(data){
+	    					context.warning("系统异常,请联系管理员!");
+	    				}
+	    			});
+	    		}
+	    	},
+	    	{
+	    		text:"关闭",
+	    		iconCls:"icon-cancel",
+	    		handler:function(){
+	    			context.closeDialog();
+	    		}
+	    	}
+	    ]
+	});
+}
+function del(){
+	var $select = $("#grid1").datagrid("getSelected");
+	if (!$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	context.confirm("确认删除？", function(){
+		$.ajax({
+			type:"post",
+			url:"role_delete",
+			data:$("#grid1").datagrid("getSelected"),
+			success:function(data){
+				if (data&&data=="ok") {
+					context.show("删除成功！");
+					$("#grid1").datagrid("reload");
+				} else {
+					context.warning("删除失败！");
+				}
+			},
+			error: function(data){
+				context.warning("系统异常,请联系管理员!");
+			}
+		});
+	});
+}
+function list(){
+	$("#grid1").datagrid("load",$("#queryForm").serializeObject());
+}
+function reset(){
+	$("#queryForm").find("input").val("");
+}
+function addFuncs(){
+	var $select = $("#grid1").datagrid("getSelected");
+	if (!$select) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	context.dialog({
+	    title: "增加功能权限",
+	    href: "role_func_list.html?funcIds=123",
+	    height:410,
+	    width:500,
+	    onLoad: function(){
+	    	$("#funcIds").val($select.funcIds);
+	    	$("#dialogGrid").datagrid({   
+	    	    url: "role_getOtherFuncs",
+	    	    fit: true,
+	    	    fitColumns: true,
+	    	    striped: true,
+	    	    rownumbers: true,
+	    	    border: false,
+	    	    pagination: true,
+	    	    pageSize: 10,
+	    	    pageNumber: 1,
+	    	    queryParams:$("#dialogQueryForm").serializeObject(),
+	    	    toolbar: "#dialog_too_bar",
+	    	    columns:[[
+	    			{field:"id", title:"",checkbox:true},
+	    	        {field:"name",title:"功能名称"},
+	    			{field:"funOrder", title:"排序",hidden:true},
+	    			{field:"funcGroup", title:"功能分组"},
+	    			{field:"icon16", title:"模块图标"},
+	    			{field:"url", title:"页面地址"}
+	    	    ]],
+		        onLoadSuccess: function(data){
+		        	$("#grid").datagrid("doCellTip",{cls:{"background-color":"#FFFFFF"},delay:500});
+		        }
+	    	});
+	    },
+	    buttons:[
+	    	{
+	    		text:"确定",
+	    		iconCls:"icon-save",
+	    		handler:function(){
+	    			var $checked = $("#dialogGrid").datagrid("getChecked");
+	    			var funcIds = "";
+	    			$.each($checked,function(i,n){
+	    				funcIds += n.id + ",";
+	    			});
+	    			if (funcIds.length > 0) {
+						funcIds = funcIds.substring(0, funcIds.length-1);
+					}
+	    			if ($select.funcIds) {
+	    				$select.funcIds += ","+funcIds;
+					} else {
+						$select.funcIds = funcIds;
+					}
+	    			$.ajax({
+	    				url:"role_modify",
+	    				type:"post",
+	    				data:$select,
+	    				success:function(data){
+	    					if (data&&data=="ok") {
+	    						context.closeDialog();
+								context.show("增加权限成功！");
+								$("#grid1").datagrid("reload");
+								$("#grid2").datagrid("load",$select);
+							} else {
+								context.warning("增加权限失败！");
+							}
+	    				},
+	    				error:function(data){
+	    					context.warning("系统异常，请联系管理员！");
+	    				}
+	    			});
+	    		}
+	    	},
+	    	{
+	    		text:"关闭",
+	    		iconCls:"icon-cancel",
+	    		handler:function(){
+	    			context.closeDialog();
+	    		}
+	    	}
+	    ]
+	});
+}
+function delFuncs(){
+	var rowData = $("#grid1").datagrid("getSelected");
+	var $select = $("#grid2").datagrid("getChecked");
+	if (!$select||$select.length==0) {
+		context.warning("您还没有选择！");
+		return;
+	}
+	var delFuncIds = "";
+	$.each($select,function(i,n){
+		delFuncIds += n.id + ",";
+	});
+	if (delFuncIds.length > 0) {
+		delFuncIds = delFuncIds.substring(0, delFuncIds.length - 1);
+	}
+	$.ajax({
+		url:"role_delFuncs",
+		type:"post",
+		data:{
+			"id":rowData.id,
+			"name":rowData.name,
+			"funcIds":rowData.funcIds,
+			"privilegeIds":rowData.privilegeIds,
+			"delFuncIds":delFuncIds
+		},
+		success:function(data){
+			if (data&&data.newFuncIds) {
+				context.show("删除权限成功！");
+				rowData.funcIds = data.newFuncIds;
+				$("#grid1").datagrid("reload");
+				$("#grid2").datagrid("load",rowData);
+			} else {
+				context.warning("删除权限失败！");
+			}
+		},
+		error:function(data){
+			context.warning("系统异常，请联系管理员！");
+		}
+	});
+}
+</script>
+</html>
